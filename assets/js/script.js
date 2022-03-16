@@ -161,16 +161,20 @@ $(".list-group").on("blur", "textarea", function() {
 });
 
 $(".list-group").on("click", "span", function() {
-  var date = $(this)
-    .text()
-    .trim();
+  // get current text
+  var date = $(this).text().trim();
 
-  var dateInput = $("<input>")
-    .attr("type", "text")
-    .addClass("form-control")
-    .val(date);
+  // create new input element
+  var dateInput = $("<input>").attr("type", "text").addClass("form-control").val(date);
+
   $(this).replaceWith(dateInput);
 
+  // enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate: 1
+  });
+
+  // automatically bring up the calendar
   dateInput.trigger("focus");
 });
 
@@ -201,6 +205,10 @@ $("#remove-tasks").on("click", function() {
   }
   console.log(tasks);
   saveTasks();
+});
+
+$("#modalDueDate").datepicker({
+  minDate: 1
 });
 
 loadTasks();
