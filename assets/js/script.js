@@ -9,8 +9,9 @@ var createTask = function(taskText, taskDate, taskList) {
     .addClass("m-1")
     .text(taskText);
 
-
   taskLi.append(taskSpan, taskP);
+
+  auditTask(taskLi);
 
   $("#list-" + taskList).append(taskLi);
 };
@@ -28,7 +29,6 @@ var loadTasks = function() {
   }
 
   $.each(tasks, function(list, arr) {
-    console.log(list, arr);
     arr.forEach(function(task) {
       createTask(task.text, task.date, list);
     });
@@ -37,6 +37,29 @@ var loadTasks = function() {
 
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
+};
+
+var auditTask = function(taskEl) {
+
+  var date = $(taskEl)
+    .find("span")
+    .text()
+    .trim();
+
+  console.log(date);
+
+  var time = moment(date, "L").set("hour", 17);
+
+  console.log(time);
+
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  } 
+  else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
+  }
 };
 
 $(".card .list-group").sortable({
@@ -91,7 +114,6 @@ $("#trash").droppable({
   tolerance: "touch",
   drop: function(event, ui) {
     ui.draggable.remove();
-
   },
   over: function(event, ui) {
     console.log(ui);
@@ -101,6 +123,9 @@ $("#trash").droppable({
   }
 });
 
+$("#modalDueDate").datepicker({
+  minDate: 1
+});
 
 $("#task-form-modal").on("show.bs.modal", function() {
   $("#modalTaskDescription, #modalDueDate").val("");
@@ -161,20 +186,23 @@ $(".list-group").on("blur", "textarea", function() {
 });
 
 $(".list-group").on("click", "span", function() {
-  // get current text
-  var date = $(this).text().trim();
+  var date = $(this)
+    .text()
+    .trim();
 
-  // create new input element
-  var dateInput = $("<input>").attr("type", "text").addClass("form-control").val(date);
-
+  var dateInput = $("<input>")
+    .attr("type", "text")
+    .addClass("form-control")
+    .val(date);
   $(this).replaceWith(dateInput);
 
-  // enable jquery ui datepicker
   dateInput.datepicker({
-    minDate: 1
+    minDate: 1,
+    onClose: function() {
+      $(this).trigger("change");
+    }
   });
 
-  // automatically bring up the calendar
   dateInput.trigger("focus");
 });
 
@@ -196,6 +224,7 @@ $(".list-group").on("change", "input[type='text']", function() {
     .addClass("badge badge-primary badge-pill")
     .text(date);
     $(this).replaceWith(taskSpan);
+    auditTask($(taskSpan).closest(".list-group-item"));
 });
 
 $("#remove-tasks").on("click", function() {
@@ -205,10 +234,6 @@ $("#remove-tasks").on("click", function() {
   }
   console.log(tasks);
   saveTasks();
-});
-
-$("#modalDueDate").datepicker({
-  minDate: 1
 });
 
 loadTasks();
